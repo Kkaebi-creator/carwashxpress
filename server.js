@@ -3,8 +3,8 @@ const cors = require("cors");
 const mysql = require("mysql2");
 const path = require("path");
 const app = express();
-app.use(cors({ origin: "http://127.0.0.1:5500", credentials: true }));
-const PORT = 3001;
+app.use(cors());
+const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../")));
@@ -29,7 +29,7 @@ const db = mysql.createConnection({
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT ? parseInt(process.env.MYSQLPORT) : 3306,
+  port: process.env.MYSQLPORT ? parseInt(process.env.MYSQLPORT) : 3306
 });
 
 db.connect((err) => {
