@@ -1,3 +1,10 @@
+// Log uncaught exceptions and unhandled promise rejections
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+});
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection:", reason);
+});
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2");
@@ -35,11 +42,12 @@ app.post("/api/admin/login", (req, res) => {
 });
 
 // MySQL connection
+
 const db = mysql.createConnection({
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
+  host: process.env.MYSQLHOST || "mysql.railway.internal",
+  user: process.env.MYSQLUSER || "root",
+  password: process.env.MYSQLPASSWORD || "RGZJbgtpNYsCXNWzlPaPCZieHSyYffN", // Use your actual Railway password
+  database: process.env.MYSQLDATABASE || "railway",
   port: process.env.MYSQLPORT ? parseInt(process.env.MYSQLPORT) : 3306,
 });
 
