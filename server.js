@@ -1,3 +1,16 @@
+// Log all environment variables at startup
+console.log('--- ENVIRONMENT VARIABLES ---');
+console.log('MYSQLHOST:', process.env.MYSQLHOST);
+console.log('MYSQLUSER:', process.env.MYSQLUSER);
+console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD);
+console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE);
+console.log('MYSQLPORT:', process.env.MYSQLPORT);
+console.log('-----------------------------');
+
+// Health check endpoint
+app.get('/api/ping', (req, res) => {
+  res.json({ status: 'ok' });
+});
 // Log uncaught exceptions and unhandled promise rejections
 process.on("uncaughtException", (err) => {
   console.error("Uncaught Exception:", err);
