@@ -12,15 +12,8 @@ app.options("*", (req, res) => {
   res.sendStatus(200);
 });
 
-app.use(cors({ origin: true, credentials: true }));
-
-// Handle all OPTIONS requests for CORS preflight
-app.options("*", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.sendStatus(200);
-});
+// Use CORS middleware with open config
+app.use(cors());
 
 const PORT = process.env.PORT || 3001;
 
