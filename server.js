@@ -3,7 +3,8 @@ const cors = require("cors");
 const mysql = require("mysql2");
 const path = require("path");
 const app = express();
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
+app.options("*", cors());
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
