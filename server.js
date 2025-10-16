@@ -1,16 +1,23 @@
+const express = require("express");
+const cors = require("cors");
+const mysql = require("mysql2");
+const path = require("path");
+const app = express();
+
 // Log all environment variables at startup
-console.log('--- ENVIRONMENT VARIABLES ---');
-console.log('MYSQLHOST:', process.env.MYSQLHOST);
-console.log('MYSQLUSER:', process.env.MYSQLUSER);
-console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD);
-console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE);
-console.log('MYSQLPORT:', process.env.MYSQLPORT);
-console.log('-----------------------------');
+console.log("--- ENVIRONMENT VARIABLES ---");
+console.log("MYSQLHOST:", process.env.MYSQLHOST);
+console.log("MYSQLUSER:", process.env.MYSQLUSER);
+console.log("MYSQLPASSWORD:", process.env.MYSQLPASSWORD);
+console.log("MYSQLDATABASE:", process.env.MYSQLDATABASE);
+console.log("MYSQLPORT:", process.env.MYSQLPORT);
+console.log("-----------------------------");
 
 // Health check endpoint
-app.get('/api/ping', (req, res) => {
-  res.json({ status: 'ok' });
+app.get("/api/ping", (req, res) => {
+  res.json({ status: "ok" });
 });
+
 // Log uncaught exceptions and unhandled promise rejections
 process.on("uncaughtException", (err) => {
   console.error("Uncaught Exception:", err);
@@ -18,11 +25,6 @@ process.on("uncaughtException", (err) => {
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason);
 });
-const express = require("express");
-const cors = require("cors");
-const mysql = require("mysql2");
-const path = require("path");
-const app = express();
 
 // Handle all OPTIONS requests for CORS preflight at the very top
 app.options("*", (req, res) => {
