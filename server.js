@@ -25,11 +25,11 @@ app.post("/api/admin/login", (req, res) => {
 
 // MySQL connection
 const db = mysql.createConnection({
-  host: process.env.DB_HOST || "turtle.proxy.rlwy.net",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "Kkaebi@223",
-  database: process.env.DB_NAME || "railway",
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 17054
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT ? parseInt(process.env.MYSQLPORT) : 3306,
 });
 
 db.connect((err) => {
