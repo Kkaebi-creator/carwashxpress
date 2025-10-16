@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel - Reservations</title>
+    <link rel="stylesheet" href="../CarWashXpress/style.css" />
+    <style>
+      /* Modal styles */
+      .modal-bg {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-bg.active {
+        display: flex;
+      }
+      .modal-content {
+        background: #181818;
+        color: #fff;
+        border-radius: 16px;
+        border: 2px solid #ff2222;
+        box-shadow: 0 4px 24px rgba(255, 0, 0, 0.18);
+        padding: 32px 40px;
+        min-width: 320px;
+        max-width: 90vw;
+        position: relative;
+        font-size: 1.08rem;
+      }
+      .modal-content h2 {
+        color: #ff2222;
+        font-size: 1.3rem;
+        margin-bottom: 18px;
+      }
+      .modal-close {
+        position: absolute;
+        top: 18px;
+        right: 24px;
+        background: #ff2222;
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        font-size: 1.3rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .modal-close:hover {
+        background: #d90000;
+      }
+      /* Tooltip styles */
+      .reservation-row {
+        position: relative;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .reservation-row:hover {
+        background: #292929;
+      }
+      .details-cell {
+        position: relative;
+        text-align: center;
+        width: 40px;
+      }
+      .details-icon {
+        display: inline-block;
+        width: 22px;
+        height: 22px;
+        background: #ff2222;
+        color: #fff;
+        border-radius: 50%;
+        font-size: 1.1rem;
+        line-height: 22px;
+        text-align: center;
+        cursor: pointer;
+        margin: 0 auto;
+        transition: background 0.2s;
+      }
+      .details-icon:hover {
+        background: #d90000;
+      }
+      .reservation-tooltip {
+        display: none;
+        position: absolute;
+        left: 50%;
+        bottom: 110%;
+        transform: translateX(-50%);
+        background: #222;
+        color: #fff;
+        border: 2px solid #ff2222;
+        border-radius: 10px;
+        padding: 18px 24px;
+        white-space: pre-line;
+        z-index: 999;
+        box-shadow: 0 2px 12px rgba(255, 0, 0, 0.12);
+        min-width: 260px;
+        max-width: 350px;
+        font-size: 1rem;
+        pointer-events: none;
+        word-break: break-word;
+      }
+      .details-cell:hover .reservation-tooltip {
+        display: block;
+      }
+      body {
+        background: #0a0a0a;
+        color: #fff;
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+      }
+      .dashboard-header {
+        text-align: center;
+        margin-top: 48px;
+        margin-bottom: 12px;
+      }
+      .dashboard-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #ff2222;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+      }
+      .dashboard-subtitle {
+        font-size: 1.15rem;
+        color: #fff;
+        font-weight: 400;
+        margin-bottom: 0;
+      }
+      .dashboard-main {
+        max-width: 1100px;
+        margin: 32px auto 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+      .dashboard-card {
+        background: #181818;
+        border-radius: 18px;
+        box-shadow: 0 4px 24px rgba(255, 0, 0, 0.12);
+        padding: 32px 40px 40px 40px;
+        border: 2px solid #ff2222;
+        margin-bottom: 0;
+      }
+      .dashboard-card-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #ff2222;
+        margin-bottom: 18px;
+        letter-spacing: 0.5px;
+      }
+      #login {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      #adminPassword {
+        padding: 10px 16px;
+        border-radius: 2em;
+        border: 2px solid #ff2222;
+        font-size: 1.1rem;
+        width: 240px;
+        background: #222;
+        color: #fff;
+        outline: none;
+        transition: border 0.2s;
+      }
+      #adminPassword:focus {
+        border-color: #fff;
+      }
+      #login button {
+        padding: 10px 32px;
+        border-radius: 2em;
+        border: none;
+        background: #ff2222;
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.1rem;
+        box-shadow: 0 2px 8px rgba(255, 0, 0, 0.15);
+        transition: background 0.2s;
+        cursor: pointer;
+      }
+      #login button:hover {
+        background: #d90000;
+      }
+      .error-msg {
+        color: #ff2222;
+        text-align: center;
+        margin-top: 16px;
+        font-weight: 500;
+        font-size: 1.1rem;
+      }
+      .footer {
+        background: #111;
+        color: #fff;
+        text-align: center;
+        padding: 32px 0 16px 0;
+        margin-top: 48px;
+        font-size: 1rem;
+        border-top: 2px solid #ff2222;
+      }
+      .footer-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #ff2222;
+        margin-bottom: 8px;
+      }
+      a {
+        color: #ff2222;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+      a:hover {
+        color: #fff;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-header">
+      <div class="dashboard-title">Admin Dashboard</div>
+      <div class="dashboard-subtitle">Manage and view all car wash reservations</div>
+    </div>
+    <main class="dashboard-main">
+      <section class="dashboard-card">
+        <div class="dashboard-card-title">Reservations</div>
+        <div id="login">
+          <input
+            type="text"
+            id="adminUsername"
+            placeholder="Username"
+            style="
+              padding: 10px 16px;
+              border-radius: 2em;
+              border: 2px solid #ff2222;
+              font-size: 1.1rem;
+              width: 240px;
+              background: #222;
+              color: #fff;
+              outline: none;
+              transition: border 0.2s;
+              margin-right: 8px;
+            "
+          />
+          <input type="password" id="adminPassword" placeholder="Password" />
+          <button onclick="adminLogin()">Login</button>
+        </div>
+        <div style="margin-bottom: 18px; display: none" id="searchBar">
+          <input
+            type="text"
+            id="reservationSearch"
+            placeholder="Search by name, email, phone, service, date..."
+            style="
+              width: 320px;
+              padding: 8px 16px;
+              border-radius: 2em;
+              border: 2px solid #ff2222;
+              font-size: 1.08rem;
+              background: #222;
+              color: #fff;
+            "
+          />
+          <select
+            id="statusFilter"
+            style="
+              width: 180px;
+              padding: 8px 16px;
+              border-radius: 2em;
+              border: 2px solid #ff2222;
+              font-size: 1.08rem;
+              background: #222;
+              color: #fff;
+              margin-left: 12px;
+            "
+          >
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+          </select>
+          <button
+            id="showDeletedBtn"
+            style="
+              margin-left: 12px;
+              padding: 8px 16px;
+              border-radius: 2em;
+              border: none;
+              background: #888;
+              color: #fff;
+              font-size: 1.08rem;
+              cursor: pointer;
+            "
+          >
+            Show Deleted
+          </button>
+        </div>
+        <div id="reservations"></div>
+        <div id="deletedReservations" style="display: none; margin-top: 24px"></div>
+        <div id="logoutBar" style="display: none; text-align: right; margin-bottom: 12px">
+          <button
+            id="logoutBtn"
+            style="
+              padding: 8px 24px;
+              border-radius: 2em;
+              border: none;
+              background: #ff2222;
+              color: #fff;
+              font-weight: 600;
+              font-size: 1.08rem;
+              cursor: pointer;
+            "
+          >
+            Logout
+          </button>
+        </div>
+      </section>
+    </main>
+    <div class="modal-bg" id="reservationModal">
+      <div class="modal-content" id="reservationModalContent">
+        <!-- Details will be injected here -->
+        <button class="modal-close" onclick="closeReservationModal()">&times;</button>
+      </div>
+    </div>
+    <script>
+      let allReservations = [];
+      let adminLoggedIn = false;
+
+      // Check login state on page load
+      window.addEventListener("DOMContentLoaded", function () {
+        if (localStorage.getItem("adminLoggedIn") === "true") {
+          adminLoggedIn = true;
+          var loginDiv = document.getElementById("login");
+          if (loginDiv) loginDiv.parentNode.removeChild(loginDiv);
+          document.getElementById("logoutBar").style.display = "block";
+          loadReservations();
+        }
+      });
+
+      document.getElementById("logoutBtn").onclick = function () {
+        localStorage.removeItem("adminLoggedIn");
+        location.reload();
+      };
+
+      function adminLogin() {
+        const username = document.getElementById("adminUsername").value;
+        const password = document.getElementById("adminPassword").value;
+        fetch("http://localhost:3001/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        })
+          .then((res) => res.json())
+          .then((result) => {
+            if (result.success) {
+              adminLoggedIn = true;
+              localStorage.setItem("adminLoggedIn", "true");
+              var loginDiv = document.getElementById("login");
+              if (loginDiv) loginDiv.parentNode.removeChild(loginDiv);
+              document.getElementById("logoutBar").style.display = "block";
+              loadReservations();
+            } else {
+              showLoginError(result.error || "Login failed");
+              // Keep login fields visible
+            }
+          })
+          .catch(() => showLoginError("Login failed"));
+      }
+
+      function showLoginError(msg) {
+        let err = document.getElementById("loginError");
+        if (!err) {
+          err = document.createElement("div");
+          err.id = "loginError";
+          err.className = "error-msg";
+          document.getElementById("login").appendChild(err);
+        }
+        err.textContent = msg;
+      }
+
+      function loadReservations() {
+        // No password needed after login
+        fetch("http://localhost:3001/api/admin/reservations?password=admin123")
+          .then((res) => res.json())
+          .then((data) => {
+            const reservationsDiv = document.getElementById("reservations");
+            const searchBar = document.getElementById("searchBar");
+            if (data.error) {
+              reservationsDiv.innerHTML = `<div class='error-msg'>${data.error}</div>`;
+              searchBar.style.display = "none";
+              return;
+            }
+            if (!data.length) {
+              reservationsDiv.innerHTML = `<div style='text-align:center;color:#888;font-size:1.1rem;'>No reservations found.</div>`;
+              searchBar.style.display = "block";
+              return;
+            }
+            allReservations = data;
+            searchBar.style.display = "block";
+            renderReservations(data);
+          });
+      }
+
+      function renderReservations(reservations) {
+        const reservationsDiv = document.getElementById("reservations");
+        if (!reservations.length) {
+          reservationsDiv.innerHTML = `<div style='text-align:center;color:#888;font-size:1.1rem;'>No reservations found.</div>`;
+          return;
+        }
+        let html = "";
+        reservations.forEach((r, idx) => {
+          html += `<div style='background:#222;border-radius:14px;border:2px solid #ff2222;box-shadow:0 2px 8px rgba(255,0,0,0.08);margin-bottom:18px;padding:18px 24px;display:flex;align-items:center;gap:18px;'>
+      <div style='flex:1;'>
+        <div style='font-size:1.08rem;font-weight:600;color:#ff2222;'>#${
+          r.id
+        } <span style='font-size:0.98rem;color:#fff;font-weight:400;'>${r.name}</span></div>
+        <div style='margin-top:4px;color:#ccc;font-size:0.98rem;'>${r.email} | ${r.phone}</div>
+        <div style='margin-top:4px;color:#fff;font-size:0.98rem;'>Service: <b>${r.service}</b></div>
+        <div style='margin-top:4px;color:#fff;font-size:0.98rem;'>Date: <b>${r.date}</b> | Time: <b>${
+            r.time ? r.time : "N/A"
+          }</b></div>
+        <div style='margin-top:4px;'>
+          <span style='display:inline-block;padding:4px 14px;border-radius:1em;font-size:0.98rem;font-weight:600;${
+            r.completed ? "background:#28a745;color:#fff;" : "background:#ff2222;color:#fff;"
+          }'>${r.completed ? "Completed" : "Pending"}</span>
+        </div>
+      </div>
+      <div style='display:flex;flex-direction:column;gap:8px;'>
+        <button class='status-btn' onclick='markCompleted(${r.id})' ${
+            r.completed ? "disabled" : ""
+          } style='background:${
+            r.completed ? "#888" : "#28a745"
+          };color:#fff;border:none;border-radius:1em;padding:6px 16px;cursor:pointer;'>${
+            r.completed ? "Completed" : "Mark Completed"
+          }</button>
+        <button class='delete-btn' onclick='deleteReservation(${
+          r.id
+        })' style='background:#ff2222;color:#fff;border:none;border-radius:1em;padding:6px 16px;cursor:pointer;'>Delete</button>
+      </div>
+      <div class='details-cell'>
+        <span class='details-icon' title='View Details' onclick='showReservationModal(${JSON.stringify(r).replace(
+          /'/g,
+          "&#39;"
+        )})'>&#9432;</span>
+      </div>
+    </div>`;
+        });
+        reservationsDiv.innerHTML = html;
+      }
+
+      document.getElementById("reservationSearch").addEventListener("input", function (e) {
+        filterAndRender();
+      });
+      document.getElementById("statusFilter").addEventListener("change", function (e) {
+        filterAndRender();
+      });
+
+      document.getElementById("showDeletedBtn").onclick = function () {
+        const div = document.getElementById("deletedReservations");
+        if (div.style.display === "none") {
+          div.innerHTML = `<div style='text-align:center;color:#888;font-size:1.1rem;'>Loading deleted reservations...</div>`;
+          div.style.display = "block";
+          fetch("http://localhost:3001/api/admin/deleted-reservations?password=admin123")
+            .then((res) => res.json())
+            .then((data) => {
+              if (!data || data.error) {
+                div.innerHTML = `<div style='text-align:center;color:#ff2222;font-size:1.1rem;'>Failed to load deleted reservations.</div>`;
+                return;
+              }
+              if (!data.length) {
+                div.innerHTML = `<div style='text-align:center;color:#888;font-size:1.1rem;'>No deleted reservations found.</div>`;
+              } else {
+                let html = `<div style='font-size:1.2rem;color:#ff2222;font-weight:600;margin-bottom:12px;'>Deleted Reservations</div>`;
+                data.forEach((r) => {
+                  html += `<div style='background:#222;border-radius:14px;border:2px solid #888;box-shadow:0 2px 8px rgba(128,128,128,0.08);margin-bottom:18px;padding:18px 24px;display:flex;align-items:center;gap:18px;'>
+              <div style='flex:1;'>
+                <div style='font-size:1.08rem;font-weight:600;color:#888;'>#${
+                  r.id
+                } <span style='font-size:0.98rem;color:#fff;font-weight:400;'>${r.name}</span></div>
+                <div style='margin-top:4px;color:#ccc;font-size:0.98rem;'>${r.email} | ${r.phone}</div>
+                <div style='margin-top:4px;color:#fff;font-size:0.98rem;'>Service: <b>${r.service}</b></div>
+                <div style='margin-top:4px;color:#fff;font-size:0.98rem;'>Date: <b>${r.date}</b> | Time: <b>${
+                    r.time ? r.time : "N/A"
+                  }</b></div>
+              </div>
+              <div style='display:flex;flex-direction:column;gap:8px;'>
+                <button onclick='restoreReservation(${
+                  r.id
+                })' style='background:#28a745;color:#fff;border:none;border-radius:1em;padding:6px 16px;cursor:pointer;'>Restore</button>
+              </div>
+            </div>`;
+                });
+                div.innerHTML = html;
+              }
+              document.getElementById("showDeletedBtn").textContent = "Hide Deleted";
+            })
+            .catch(() => {
+              div.innerHTML = `<div style='text-align:center;color:#ff2222;font-size:1.1rem;'>Failed to load deleted reservations.</div>`;
+            });
+        } else {
+          div.style.display = "none";
+          document.getElementById("showDeletedBtn").textContent = "Show Deleted";
+        }
+      };
+      window.restoreReservation = function (id) {
+        fetch(`http://localhost:3001/api/admin/reservations/${id}/restore`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: "admin123" }),
+        })
+          .then((res) => res.json())
+          .then((result) => {
+            if (result.success) {
+              document.getElementById("deletedReservations").style.display = "none";
+              document.getElementById("showDeletedBtn").textContent = "Show Deleted";
+              loadReservations();
+            } else {
+              alert("Failed to restore reservation");
+            }
+          });
+      };
+      function filterAndRender() {
+        const query = document.getElementById("reservationSearch").value.trim().toLowerCase();
+        const status = document.getElementById("statusFilter").value;
+        let filtered = allReservations.filter((r) => {
+          // Multi-field, partial, and exact match
+          if (!query) return true;
+          return (
+            (r.name && r.name.toLowerCase().includes(query)) ||
+            (r.email && r.email.toLowerCase().includes(query)) ||
+            (r.phone && r.phone.toLowerCase().includes(query)) ||
+            (r.service && r.service.toLowerCase().includes(query)) ||
+            (r.date && r.date.toLowerCase().includes(query)) ||
+            String(r.id) === query // exact match for ID
+          );
+        });
+        if (status === "completed") filtered = filtered.filter((r) => r.completed);
+        if (status === "pending") filtered = filtered.filter((r) => !r.completed);
+        renderReservations(filtered);
+      }
+      window.markCompleted = function (id) {
+        fetch(`http://localhost:3001/api/admin/reservations/${id}/complete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: "admin123" }),
+        })
+          .then((res) => res.json())
+          .then((result) => {
+            if (result.success) loadReservations();
+            else alert("Failed to mark as completed");
+          });
+      };
+
+      window.deleteReservation = function (id) {
+        if (!confirm("Are you sure you want to delete this reservation?")) return;
+        fetch(`http://localhost:3001/api/admin/reservations/${id}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: "admin123" }),
+        })
+          .then((res) => res.json())
+          .then((result) => {
+            if (result.success) loadReservations();
+            else alert("Failed to delete reservation");
+          });
+      };
+      function showReservationModal(r) {
+        const modal = document.getElementById("reservationModal");
+        const content = document.getElementById("reservationModalContent");
+        content.innerHTML = `
+            <button class='modal-close' onclick='closeReservationModal()'>&times;</button>
+            <h2>Reservation Details</h2>
+            <div><b>ID:</b> ${r.id}</div>
+            <div><b>Name:</b> ${r.name}</div>
+            <div><b>Email:</b> ${r.email}</div>
+            <div><b>Phone:</b> ${r.phone}</div>
+            <div><b>Service:</b> ${r.service}</div>
+            <div><b>Date:</b> ${r.date}</div>
+      <div><b>Time:</b> ${r.time ? r.time : "N/A"}</div>
+          `;
+        modal.classList.add("active");
+      }
+      function closeReservationModal() {
+        document.getElementById("reservationModal").classList.remove("active");
+      }
+      // Prevent modal from closing when clicking outside
+      document.getElementById("reservationModal").addEventListener("mousedown", function (e) {
+        if (e.target === this) {
+          // Do nothing
+          e.stopPropagation();
+        }
+      });
+      document.getElementById("adminPassword").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") loadReservations();
+      });
+    </script>
+  </body>
+</html>
