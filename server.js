@@ -67,18 +67,26 @@ const db = mysql.createConnection({
 });
 
 db.connect((err) => {
-  if (err) throw err;
+  if (err) {
+    console.error("MySQL connection error:", err);
+    process.exit(1);
+  }
   console.log("Connected to MySQL database");
 });
 
 // Create reservation
 app.post("/api/reserve", (req, res) => {
   const { name, email, phone, service, date, time } = req.body;
+  console.log("Incoming reservation request:", req.body);
   db.query(
     "INSERT INTO reservations (name, email, phone, service, date, time) VALUES (?, ?, ?, ?, ?, ?)",
     [name, email, phone, service, date, time],
     function (err, result) {
-      if (err) return res.status(500).json({ error: err.message });
+      if (err) {
+        console.error("Reservation insert error:", err);
+        return res.status(500).json({ error: err.message });
+      }
+      console.log("Reservation insert result:", result);
       res.json({ success: true, id: result.insertId });
     }
   );
