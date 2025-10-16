@@ -5,6 +5,15 @@ const path = require("path");
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.options("*", cors());
+
+// Handle all OPTIONS requests for CORS preflight
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.sendStatus(200);
+});
+
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
