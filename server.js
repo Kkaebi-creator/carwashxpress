@@ -3,8 +3,16 @@ const cors = require("cors");
 const mysql = require("mysql2");
 const path = require("path");
 const app = express();
+
+// Handle all OPTIONS requests for CORS preflight at the very top
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.sendStatus(200);
+});
+
 app.use(cors({ origin: true, credentials: true }));
-app.options("*", cors());
 
 // Handle all OPTIONS requests for CORS preflight
 app.options("*", (req, res) => {
