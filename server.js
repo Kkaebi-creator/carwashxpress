@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const mysql = require("mysql2");
+const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const app = express();
 
@@ -26,16 +26,14 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason);
 });
 
-// Handle all OPTIONS requests for CORS preflight at the very top
-app.options("*", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.sendStatus(200);
-});
 
-// Use CORS middleware with open config
-app.use(cors());
+// Use CORS middleware with Netlify frontend origin
+const NETLIFY_ORIGIN = process.env.NETLIFY_ORIGIN || "https://your-netlify-site.netlify.app"; // Replace with your actual Netlify URL
+app.use(cors({
+  origin: NETLIFY_ORIGIN,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 const PORT = process.env.PORT || 3001;
 
@@ -56,38 +54,29 @@ app.post("/api/admin/login", (req, res) => {
   }
 });
 
-// MySQL connection
-
-const db = mysql.createConnection({
-  host: process.env.MYSQLHOST || "mysql.railway.internal",
-  user: process.env.MYSQLUSER || "root",
-  password: process.env.MYSQLPASSWORD || "RGZJbgtpNYsCXNWzlPaPCZieHSyYffN", // Use your actual Railway password
-  database: process.env.MYSQLDATABASE || "railway",
-  port: process.env.MYSQLPORT ? parseInt(process.env.MYSQLPORT) : 3306,
-});
-
-db.connect((err) => {
+// SQLite connection
+const db = new sqlite3.Database("./reservations.db", (err) => {
   if (err) {
-    console.error("MySQL connection error:", err);
+    console.error("SQLite connection error:", err);
     process.exit(1);
   }
-  console.log("Connected to MySQL database");
+  console.log("Connected to SQLite database");
 });
 
 // Create reservation
 app.post("/api/reserve", (req, res) => {
   const { name, email, phone, service, date, time } = req.body;
   console.log("Incoming reservation request:", req.body);
-  db.query(
+  db.run(
     "INSERT INTO reservations (name, email, phone, service, date, time) VALUES (?, ?, ?, ?, ?, ?)",
     [name, email, phone, service, date, time],
-    function (err, result) {
+    function (err) {
       if (err) {
         console.error("Reservation insert error:", err);
         return res.status(500).json({ error: err.message });
       }
-      console.log("Reservation insert result:", result);
-      res.json({ success: true, id: result.insertId });
+      console.log("Reservation insert result, rowid:", this.lastID);
+      res.json({ success: true, id: this.lastID });
     }
   );
 });
@@ -97,7 +86,7 @@ app.get("/api/admin/reservations", (req, res) => {
   if (req.query.password !== "admin123") {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  db.query("SELECT * FROM reservations WHERE deleted = 0", [], (err, rows) => {
+  db.all("SELECT * FROM reservations WHERE deleted = 0", [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -108,7 +97,7 @@ app.post("/api/admin/reservations/:id/complete", (req, res) => {
   if (req.body.password !== "admin123") {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  db.query("UPDATE reservations SET completed = 1 WHERE id = ?", [req.params.id], function (err, result) {
+  db.run("UPDATE reservations SET completed = 1 WHERE id = ?", [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ success: true });
   });
@@ -119,7 +108,7 @@ app.delete("/api/admin/reservations/:id", (req, res) => {
   if (req.body.password !== "admin123") {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  db.query("UPDATE reservations SET deleted = 1 WHERE id = ?", [req.params.id], function (err, result) {
+  db.run("UPDATE reservations SET deleted = 1 WHERE id = ?", [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ success: true });
   });
@@ -130,7 +119,7 @@ app.get("/api/admin/deleted-reservations", (req, res) => {
   if (req.query.password !== "admin123") {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  db.query("SELECT * FROM reservations WHERE deleted = 1", [], (err, rows) => {
+  db.all("SELECT * FROM reservations WHERE deleted = 1", [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -141,7 +130,7 @@ app.post("/api/admin/reservations/:id/restore", (req, res) => {
   if (req.body.password !== "admin123") {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  db.query("UPDATE reservations SET deleted = 0 WHERE id = ?", [req.params.id], function (err, result) {
+  db.run("UPDATE reservations SET deleted = 0 WHERE id = ?", [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ success: true });
   });

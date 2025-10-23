@@ -530,18 +530,25 @@
       function filterAndRender() {
         const query = document.getElementById("reservationSearch").value.trim().toLowerCase();
         const status = document.getElementById("statusFilter").value;
-        let filtered = allReservations.filter((r) => {
-          // Multi-field, partial, and exact match
-          if (!query) return true;
-          return (
-            (r.name && r.name.toLowerCase().includes(query)) ||
-            (r.email && r.email.toLowerCase().includes(query)) ||
-            (r.phone && r.phone.toLowerCase().includes(query)) ||
-            (r.service && r.service.toLowerCase().includes(query)) ||
-            (r.date && r.date.toLowerCase().includes(query)) ||
-            String(r.id) === query // exact match for ID
-          );
-        });
+        let filtered = allReservations;
+        if (query) {
+          if (query.startsWith("#")) {
+            // Ticket number search (e.g., #123)
+            const ticketId = query.slice(1);
+            filtered = filtered.filter((r) => String(r.id) === ticketId);
+          } else {
+            // Multi-field, partial, and exact match
+            filtered = filtered.filter(
+              (r) =>
+                (r.name && r.name.toLowerCase().includes(query)) ||
+                (r.email && r.email.toLowerCase().includes(query)) ||
+                (r.phone && r.phone.toLowerCase().includes(query)) ||
+                (r.service && r.service.toLowerCase().includes(query)) ||
+                (r.date && r.date.toLowerCase().includes(query)) ||
+                String(r.id) === query // exact match for ID
+            );
+          }
+        }
         if (status === "completed") filtered = filtered.filter((r) => r.completed);
         if (status === "pending") filtered = filtered.filter((r) => !r.completed);
         renderReservations(filtered);
