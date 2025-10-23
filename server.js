@@ -26,14 +26,15 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason);
 });
 
-
 // Use CORS middleware with Netlify frontend origin
 const NETLIFY_ORIGIN = process.env.NETLIFY_ORIGIN || "https://carwashxpress.netlify.app"; // Netlify site URL
-app.use(cors({
-  origin: NETLIFY_ORIGIN,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+app.use(
+  cors({
+    origin: NETLIFY_ORIGIN,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 const PORT = process.env.PORT || 3001;
 
@@ -93,6 +94,19 @@ app.get("/api/admin/reservations", (req, res) => {
 });
 
 // Mark reservation as completed
+app.post("/api/admin/reservations/:id/complete", (req, res) => {
+  if (req.body.password !== "admin123") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  db.run(
+    "UPDATE reservations SET completed = 1 WHERE id = ?",
+    [req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    }
+  );
+});
 
 // Delete reservation
 app.delete("/api/admin/reservations/:id", (req, res) => {
